@@ -1,0 +1,314 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// CONFIGURATION MAIRIE
+// ============================================
+
+model Mairie {
+  id              String   @id @default(uuid())
+  name            String
+  domain          String   @unique
+  subdomain       String   @unique
+  logoUrl         String?
+  primaryColor    String   @default("#1F2937")
+  secondaryColor  String   @default("#3B82F6")
+  description     String?
+  address         String?
+  phone           String?
+  email           String?
+  openingHours    String? // JSON format
+  mayorName       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  users           User[]
+  articles        Article[]
+  services        Service[]
+  evenements      Evenement[]
+  albums          Album[]
+  audiences       Audience[]
+  creneaux        CreneauAudience[]
+  socialMedia     SocialMedia[]
+  pageViews       PageView[]
+  audienceStats   AudienceStats[]
+}
+
+// ============================================
+// UTILISATEURS & AUTHENTIFICATION
+// ============================================
+
+model User {
+  id            String   @id @default(uuid())
+  email         String
+  passwordHash  String
+  nom           String?
+  prenom        String?
+  role          UserRole @default(ASSISTANTE)
+  isActive      Boolean  @default(true)
+  lastLogin     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  mairie        Mairie   @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  mairieId      String
+
+  @@unique([email, mairieId])
+  @@index([mairieId])
+}
+
+enum UserRole {
+  ADMIN
+  ASSISTANTE
+  MAIRE
+}
+
+// ============================================
+// CONTENU SITE VITRINE
+// ============================================
+
+model Article {
+  id            String   @id @default(uuid())
+  titre         String
+  slug          String
+  contenu       String   // Rich text
+  excerpt       String?
+  imageUrl      String?
+  categorie     String?
+  published     Boolean  @default(false)
+  publishedAt   DateTime?
+  viewsCount    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  mairie        Mairie   @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  mairieId      String
+
+  @@unique([slug, mairieId])
+  @@index([mairieId])
+  @@index([published])
+}
+
+model Service {
+  id            String   @id @default(uuid())
+  nom           String
+  slug          String
+  description   String   // Rich text
+  categorie     String?
+  contact       String?
+  email         String?
+  phone         String?
+  documents     String?  // JSON array of file paths
+  conditions    String?
+  delais        String?
+  imageUrl      String?
+  ordre         Int      @default(0)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  mairie        Mairie   @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  mairieId      String
+
+  @@unique([slug, mairieId])
+  @@index([mairieId])
+  @@index([isActive])
+}
+
+model Evenement {
+  id            String   @id @default(uuid())
+  titre         String
+  slug          String
+  description   String   // Rich text
+  imageUrl      String?
+  categorie     String?
+  dateStart     DateTime
+  timeStart     String?
+  dateEnd       DateTime?
+  timeEnd       String?
+  lieu          String?
+  rsvpEnabled   Boolean  @default(false)
+  maxParticipants Int?
+  viewsCount    Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  mairie        Mairie   @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  mairieId      String
+
+  @@unique([slug, mairieId])
+  @@index([mairieId])
+  @@index([dateStart])
+}
+
+model Album {
+  id            String   @id @default(uuid())
+  titre         String
+  description   String?
+  ordre         Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  mairie        Mairie   @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  mairieId      String
+  photos        Photo[]
+
+  @@index([mairieId])
+}
+
+model Photo {
+  id            String   @id @default(uuid())
+  url           String
+  titre         String?
+  ordre         Int      @default(0)
+  createdAt     DateTime @default(now())
+
+  album         Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  albumId       String
+
+  @@index([albumId])
+}
+
+// ============================================
+// MODULE AUDIENCES
+// ============================================
+
+model Audience {
+  id                String   @id @default(uuid())
+  nomCitoyen        String
+  prenomCitoyen     String?
+  email             String
+  telephone         String
+  objet             String
+  message           String?
+  dateDemandee      DateTime
+  heureDemandee     String?
+  status            AudienceStatus @default(EN_ATTENTE)
+  priorite          AudiencePriorite @default(NORMAL)
+  messageReponse    String?
+  notesInterne      String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  mairie            Mairie   @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  mairieId          String
+
+  @@index([mairieId])
+  @@index([status])
+  @@index([dateDemandee])
+}
+
+enum AudienceStatus {
+  EN_ATTENTE
+  CONFIRMEE
+  REFUSEE
+  REPORTEE
+}
+
+enum AudiencePriorite {
+  NORMAL
+  VIP
+  URGENT
+}
+
+model CreneauAudience {
+  id            String   @id @default(uuid())
+  jour          String   // lundi-dimanche
+  heureDebut    String   // HH:mm
+  heureFin      String   // HH:mm
+  capacite      Int      @default(1)
+  dureeAudience Int      @default(30) // minutes
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  mairie        Mairie   @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  mairieId      String
+
+  @@index([mairieId])
+}
+
+// ============================================
+// RÉSEAUX SOCIAUX
+// ============================================
+
+model SocialMedia {
+  id            String   @id @default(uuid())
+  plateforme    String   // facebook, twitter, instagram, youtube, whatsapp
+  url           String
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  mairie        Mairie   @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  mairieId      String
+
+  @@unique([plateforme, mairieId])
+  @@index([mairieId])
+}
+
+// ============================================
+// ANALYTICS & STATISTIQUES
+// ============================================
+
+model PageView {
+  id            String   @id @default(uuid())
+  page          String   // /articles, /services, etc
+  referrer      String?
+  userAgent     String?
+  deviceType    String?  // mobile, tablet, desktop
+  ipAddress     String?
+  createdAt     DateTime @default(now())
+
+  mairie        Mairie   @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  mairieId      String
+
+  @@index([mairieId])
+  @@index([createdAt])
+}
+
+model AudienceStats {
+  id                    String   @id @default(uuid())
+  mois                  Int
+  annee                 Int
+  totalDemandes         Int      @default(0)
+  confirmees            Int      @default(0)
+  refusees              Int      @default(0)
+  reportees             Int      @default(0)
+  vipCount              Int      @default(0)
+  urgentCount           Int      @default(0)
+  tempsmoyenTraitement  Int      @default(0) // jours
+  updatedAt             DateTime @updatedAt
+
+  mairie                Mairie   @relation(fields: [mairieId], references: [id], onDelete: Cascade)
+  mairieId              String
+
+  @@unique([mois, annee, mairieId])
+  @@index([mairieId])
+}
+
+// ============================================
+// LOGS & AUDIT
+// ============================================
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  action        String   // CREATE, UPDATE, DELETE
+  entity        String   // Article, Service, Audience, etc
+  entityId      String
+  changes       String?  // JSON of changes
+  userId        String?
+  ipAddress     String?
+  createdAt     DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entityId])
+}

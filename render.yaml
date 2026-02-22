@@ -1,0 +1,79 @@
+# render.yaml - Configuration pour déploiement sur Render
+# Déployer: push sur Git + Render détecte automatiquement
+
+services:
+  # Service Backend (Express API)
+  - type: web
+    name: mairie-backend
+    runtime: node
+    plan: standard
+    region: frankfurt  # ou eu-central, us-east, us-west, ap-tokyo
+    buildCommand: cd mairie-instance/backend && npm install && npm run migrate
+    startCommand: cd mairie-instance/backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mairie-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://mairie-frontend.onrender.com
+      - key: BACKOFFICE_URL
+        value: https://mairie-backoffice.onrender.com
+      - key: SMTP_HOST
+        value: smtp.gmail.com
+      - key: SMTP_PORT
+        value: "587"
+      - key: SMTP_USER
+        sync: false  # À configurer manuellement
+      - key: SMTP_PASS
+        sync: false  # À configurer manuellement
+      - key: EMAIL_FROM
+        value: noreply@mairie-platform.ci
+
+  # Service Frontend (Next.js Vitrine)
+  - type: web
+    name: mairie-frontend
+    runtime: node
+    plan: standard
+    region: frankfurt
+    buildCommand: cd mairie-instance/frontend && npm install && npm run build
+    startCommand: cd mairie-instance/frontend && npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://mairie-backend.onrender.com/api
+      - key: NEXT_PUBLIC_MAIRIE_ID
+        value: default
+
+  # Service Backoffice (React Dashboard)
+  - type: web
+    name: mairie-backoffice
+    runtime: node
+    plan: standard
+    region: frankfurt
+    buildCommand: cd mairie-instance/backoffice && npm install && npm run build
+    startCommand: cd mairie-instance/backoffice && npm start
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://mairie-backend.onrender.com/api
+
+  # Database PostgreSQL
+  - type: pserv
+    name: mairie-db
+    plan: starter
+    region: frankfurt
+    version: "15"
+    ipAllowList: []  # Accessible depuis tous les services Render
+
+# Hooks
+hooks:
+  preStart: |
+    cd mairie-instance/backend
+    npm run migrate
+
+# Notifications
+notices:
+  - type: "stripe_subscription_statuses"

@@ -1,0 +1,76 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.pnp
+
+# Environment
+.env
+.env.local
+.env.*.local
+.env.production
+
+# Build output
+dist/
+build/
+.next/
+out/
+.nuxt/
+.vuepress/dist
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
+.c9/
+*.sublime-workspace
+
+# Logs
+logs/
+*.log
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+.dockerignore
+
+# Testing
+coverage/
+.nyc_output/
+
+# Misc
+*.pem
+*.key
+*.crt
+instances/*/node_modules
+instances/*/.env
+instances/*/dist
+instances/*/.next
+instances/*/build
+
+# Backup files
+*.bak
+*.backup
+*.tmp
+
+# Production
+*.min.js
+*.min.css

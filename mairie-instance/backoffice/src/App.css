@@ -1,0 +1,50 @@
+/* src/App.css */
+.app {
+  display: flex;
+  height: 100vh;
+  background-color: #f3f4f6;
+}
+
+.sidebar {
+  width: 16rem;
+  background-color: #111827;
+  color: white;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  background-color: white;
+  padding: 1.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+}
+
+/* Animations */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: slideIn 0.3s ease-out;
+}

@@ -1,0 +1,49 @@
+<!-- render-backend.yaml -->
+services:
+  - type: web
+    name: mairie-backend
+    env: node
+    plan: standard
+    startCommand: npm start
+    buildCommand: npm install && npx prisma migrate deploy
+    
+    rootDir: mairie-instance/backend
+    
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mairie-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        value: https://mairie-frontend.onrender.com
+      - key: BACKOFFICE_URL
+        value: https://mairie-backoffice.onrender.com
+      - key: PORT
+        value: "10000"
+      - key: LOG_LEVEL
+        value: info
+    
+    # Redéployer automatiquement quand main push
+    autoDeploy: true
+    
+    # Volumes pour uploads fichiers (optionnel)
+    disks:
+      - name: uploads
+        mountPath: /app/uploads
+        sizeGB: 10
+
+databases:
+  - name: mairie-db
+    engine: postgres
+    version: "15"
+    plan: starter
+    region: frankfurt
+    ipAllowList: []
+
+# Pre-deploy hook
+hooks:
+  preStart: npx prisma migrate deploy
