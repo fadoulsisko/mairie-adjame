@@ -1,12 +1,9 @@
 services:
-  # Database PostgreSQL
   - type: pserv
     name: mairie-db
-    ipAllowList: []
     plan: starter
     region: frankfurt
 
-  # Backend API (Express)
   - type: web
     name: mairie-backend
     runtime: node
@@ -14,7 +11,6 @@ services:
     region: frankfurt
     buildCommand: cd mairie-instance/backend && npm install && npx prisma migrate deploy
     startCommand: cd mairie-instance/backend && npm start
-    healthCheckPath: /health
     envVars:
       - key: NODE_ENV
         value: production
@@ -27,7 +23,6 @@ services:
       - key: PORT
         value: "3000"
 
-  # Frontend (Next.js)
   - type: web
     name: mairie-frontend
     runtime: node
@@ -41,7 +36,6 @@ services:
       - key: NODE_ENV
         value: production
 
-  # Backoffice (React)
   - type: web
     name: mairie-backoffice
     runtime: node
