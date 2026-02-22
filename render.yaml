@@ -5,7 +5,6 @@ services:
     ipAllowList: []
     plan: starter
     region: frankfurt
-    version: "15"
 
   # Backend API (Express)
   - type: web
